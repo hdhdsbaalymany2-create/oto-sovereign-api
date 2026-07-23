@@ -1,0 +1,71 @@
+const http = require('http');
+const url = require('url');
+
+const assetsList = [
+    "AUD/CAD OTC", "AUD/CHF OTC", "AUD/JPY OTC", "AUD/NZD OTC", "AUD/USD OTC",
+    "EUR/AUD OTC", "EUR/CAD OTC", "EUR/CHF OTC", "EUR/GBP OTC", "EUR/JPY OTC",
+    "EUR/NZD OTC", "EUR/USD OTC", "GBP/AUD OTC", "GBP/CAD OTC", "GBP/CHF OTC",
+    "GBP/JPY OTC", "GBP/NZD OTC", "GBP/USD OTC", "NZD/CAD OTC", "NZD/CHF OTC",
+    "NZD/JPY OTC", "USD/CAD OTC", "USD/CHF OTC", "USD/JPY OTC"
+];
+
+const server = http.createServer((req, res) => {
+    // فتح البرتوکول بالكامل ليتوافق مع أي طلب خارجي أو محلي دون قيود
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+
+    const parsedUrl = url.parse(req.url, true);
+    console.log(`📥 طلب استعلام ثابت مستلم على برتوکول المنظومة: ${parsedUrl.pathname}`);
+
+    const currentPrice = parseFloat((Math.random() * (1.8 - 0.8) + 0.8).toFixed(5));
+    const totalVolume = Math.floor(Math.random() * 50000) + 1000;
+    const ticksCount = Math.floor(Math.random() * 60) + 10;
+    const priceChange = parseFloat((Math.random() * 0.3 - 0.15).toFixed(4));
+    const liquidityRatio = parseFloat((Math.random() * 0.4 + 0.3).toFixed(2));
+
+    const assetsData = {};
+    assetsList.forEach(asset => {
+        assetsData[asset] = {
+            price: parseFloat((currentPrice + (Math.random() * 0.01 - 0.005)).toFixed(5)),
+            volume: Math.floor(Math.random() * 60000) + 5000,
+            ticks: Math.floor(Math.random() * 50) + 5,
+            change: parseFloat((Math.random() * 0.5 - 0.25).toFixed(4)),
+            liquidity_dominance: liquidityRatio,
+            action_signal: "+1 (STRONG OTO SIGNAL 🚀)"
+        };
+    });
+
+    const responsePayload = {
+        status: "success",
+        success: true,
+        timestamp: Date.now(),
+        all_assets: assetsData,
+        market_depth: {
+            current_price: currentPrice,
+            total_volume: totalVolume,
+            ticks_count: ticksCount,
+            price_change: priceChange,
+            liquidity_dominance: liquidityRatio
+        },
+        engine_decision: {
+            action_signal: "+1 (STRONG OTO SIGNAL 🚀)"
+        }
+    };
+
+    res.writeHead(200);
+    res.end(JSON.stringify(responsePayload, null, 2));
+});
+
+// تثبيت الاستماع على البروتوكول المحلي بشكل دائم
+const PORT = 8766;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`⚡ OTO Protocol Engine locked & running permanently on port ${PORT}`);
+});
